@@ -1,4 +1,4 @@
-## Visualisation Toolkit (`mattplotlib`)
+## Matt's data visualisation toolkit `mattplotlib`)
 
 The `mattplotlib` package provides a small, opinionated set of plotting helpers 
 layered on Matplotlib, Seaborn, and Plotly.
