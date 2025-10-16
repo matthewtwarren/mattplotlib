@@ -1,7 +1,18 @@
 [mattplotlib]
 # Override the default font, colour palette, or backend templates.
-font_family = "Andale Mono"
-color_cycle = ["#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02"]
+font_family = "Helvetica"
+color_cycle = [
+    "#1B9E77",
+    "#D95F02",
+    "#7570B3",
+    "#E7298A",
+    "#66A61E",
+    "#E6AB02",
+    "#A90E0E",
+    "#559EE6",
+    "#6D4444",
+    "#9A9A9A",
+]
 plotly_template = "plotly_white"
 
 # Point to a custom Matplotlib .mplstyle file if you maintain one elsewhere.

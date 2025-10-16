@@ -40,6 +40,10 @@ class MattplotlibConfig:
         "#E7298A",
         "#66A61E",
         "#E6AB02",
+        "#A90E0E",
+        "#559EE6",
+        "#6D4444",
+        "#9A9A9A",
     )
     seaborn_theme: Optional[Dict[str, Any]] = None
     plotly_template: str = "plotly_white"
