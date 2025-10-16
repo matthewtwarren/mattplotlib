@@ -23,7 +23,7 @@ legend.scatterpoints: 1
 lines.linewidth: 1.8
 lines.solid_capstyle: round
 patch.edgecolor: white
-patch.linewidth: 0.3
+patch.linewidth: 1
 text.color: 0.15
 xtick.color: 0.15
 xtick.direction: out
