@@ -1,6 +1,6 @@
 [mattplotlib]
 # Override the default font, colour palette, or backend templates.
-font_family = "Helvetica"
+font_family = "Andale Mono"
 color_cycle = [
     "#1B9E77",
     "#D95F02",
