@@ -6,13 +6,12 @@ underlying ``Axes`` object for further customisation.
 """
 
 from __future__ import annotations
-
 from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
-
 import matplotlib.pyplot as plt
+from matplotlib_venn import venn2, venn3
 import numpy as np
-
 from .style import apply_mpl_style
+from .config import get_config
 
 
 def _prepare_axes(ax: Optional[plt.Axes], use_style: bool) -> plt.Axes:
@@ -21,7 +20,7 @@ def _prepare_axes(ax: Optional[plt.Axes], use_style: bool) -> plt.Axes:
     return ax if ax is not None else plt.gca()
 
 
-def nested_donut_chart(
+def plot_nested_donut(
     outer_values: Sequence[Sequence[float]],
     *,
     inner_values: Optional[Sequence[float]] = None,
@@ -33,8 +32,8 @@ def nested_donut_chart(
     radius: float = 1.0,
     width: float = 0.3,
     startangle: float = 90.0,
-    inner_colors: Optional[Sequence[str]] = None,
-    outer_colors: Optional[Sequence[str]] = None,
+    inner_colors: Optional[Sequence[str]] = get_config().color_cycle,
+    outer_colors: Optional[Sequence[str]] = get_config().color_cycle,
     inner_autopct: Optional[Union[str, Callable[[float], str]]] = "%1.0f%%",
     inner_textprops: Optional[Mapping[str, Any]] = None,
     inner_wedgeprops: Optional[Mapping[str, Any]] = None,
@@ -49,6 +48,7 @@ def nested_donut_chart(
     center_text_kwargs: Optional[Mapping[str, Any]] = None,
     equal_aspect: bool = True,
     normalize_outer: bool = False,
+    outpath: Optional[str] = None,
 ) -> plt.Axes:
     """Draw a flexible, multi-ring donut chart.
 
@@ -72,7 +72,7 @@ def nested_donut_chart(
         Geometric properties for the concentric pies. ``width`` applies to both
         rings; adjust ``radius`` to scale the overall chart.
     inner_colors / outer_colors:
-        Optional colour sequences. Defaults fall back to evenly sampled colours
+        Optional colour sequences. Defaults fall back to evenly sampled colors
         from Matplotlib's ``tab20c`` colormap.
     inner_autopct / inner_textprops / inner_wedgeprops / inner_pie_kwargs:
         Fine-grained controls for the inner ring appearance and labelling. Set
@@ -145,14 +145,6 @@ def nested_donut_chart(
     if outer_labels is None:
         outer_labels = [None] * flat_outer.shape[0]
 
-    # Fallback colour palettes inspired by Matplotlib's tab20c cycle.
-    if inner_colors is None:
-        cmap = plt.get_cmap("tab20c")
-        inner_colors = [cmap(i) for i in np.linspace(0.0, 0.9, inner_array.shape[0])]
-    if outer_colors is None:
-        cmap = plt.get_cmap("tab20c")
-        outer_colors = [cmap((i + 0.5) % 1.0) for i in np.linspace(0.0, 0.95, flat_outer.shape[0])]
-
     inner_radius = max(radius - width, 0)
 
     default_inner_wedgeprops = {"width": width, "edgecolor": "white"}
@@ -170,7 +162,7 @@ def nested_donut_chart(
     if inner_autopct:
         inner_kwargs["autopct"] = inner_autopct
 
-    default_textprops = {"color": "white", "fontsize": 9}
+    default_textprops = {"color": "white", "fontsize": 12}
     if inner_textprops:
         default_textprops.update(inner_textprops)
 
@@ -209,11 +201,10 @@ def nested_donut_chart(
         default_annotation_kwargs: dict[str, Any] = {
             "arrowprops": {"arrowstyle": "-", "color": "0.25", "linewidth": 0.8},
             "bbox": {"boxstyle": "round,pad=0.5", "fc": "white", "ec": "0.2", "lw": 0.5},
-            "fontsize": 9,
+            "fontsize": 12,
             "va": "center",
         }
         if annotation_kwargs:
-            # Allow users to override nested dicts like arrowprops/bbox.
             for key, value in annotation_kwargs.items():
                 if key in {"arrowprops", "bbox"} and key in default_annotation_kwargs:
                     merged = {**default_annotation_kwargs[key], **value}
@@ -234,7 +225,6 @@ def nested_donut_chart(
             x_mid = mid_radius * x
             y_mid = mid_radius * y
 
-            # Place tezt annotation horizontally offset
             x_text = annotation_distance * np.sign(x)
             y_text = annotation_distance * y
 
@@ -243,19 +233,15 @@ def nested_donut_chart(
             if ha_override is not None:
                 horizontalalignment = ha_override
 
-            # Build a per-wedge copy of annotation kwargs so we can safely tweak
-            # nested dicts (like ``arrowprops``) without mutating the defaults.
             ann_kwargs = {}
             for key, value in default_annotation_kwargs.items():
                 if key in {"ha", "horizontalalignment"}:
                     continue
-                # copy nested dicts to avoid side-effects
                 if isinstance(value, dict):
                     ann_kwargs[key] = {**value}
                 else:
                     ann_kwargs[key] = value
 
-            # Add a connectionstyle specific to this wedge so the arrow follows
             connectionstyle = f"angle,angleA=0,angleB={angle}"
             if "arrowprops" in ann_kwargs and isinstance(ann_kwargs["arrowprops"], dict):
                 ann_kwargs["arrowprops"].update({"connectionstyle": connectionstyle})
@@ -271,7 +257,7 @@ def nested_donut_chart(
             )
 
     if center_text:
-        text_kwargs = {"ha": "center", "va": "center", "fontsize": 10, "fontweight": "bold"}
+        text_kwargs = {"ha": "center", "va": "center", "fontsize": 14, "fontweight": "bold"}
         if center_text_kwargs:
             text_kwargs.update(center_text_kwargs)
         axis.text(0, 0, center_text, **text_kwargs)
@@ -279,4 +265,241 @@ def nested_donut_chart(
     if equal_aspect:
         axis.set_aspect("equal")
 
+    if outpath:
+        plt.savefig(outpath, bbox_inches='tight', dpi=300)
+
     return axis
+
+
+
+def plot_venn(
+        sets: Sequence[str],
+        set_labels: Sequence[str],
+        colors: Sequence[str] = get_config().color_cycle,
+        alpha: float = 0.7,
+        subset_labels_kwargs: Optional[Mapping[str, Any]] = None,
+        set_labels_kwargs: Optional[Mapping[str, Any]] = None,
+        circle_kwargs: Optional[Mapping[str, Any]] = None,
+        set_label_shifts: Optional[Sequence[tuple[float, float]]] = None,
+        annotate_set_labels: bool = True,
+        annotation_distance: float = 0.2,
+        annotation_kwargs: Optional[Mapping[str, Any]] = None,
+        use_style: bool = True,
+        outpath: Optional[str] = None,
+) -> plt.Axes:
+    """Create a Venn diagram with optional annotations.
+
+    Parameters
+    ----------
+    sets:
+        The sets to display (2 or 3 sets supported).
+    set_labels:
+        Labels for each set.
+    colors:
+        Color sequence for the circles and set labels. First 2-3 colors used
+        depending on the number of sets.
+    alpha:
+        Transparency level for circles (0-1).
+    subset_labels_kwargs:
+        Keyword arguments for subset labels (numbers in regions). Defaults:
+        fontsize=12, fontweight="bold", color="white".
+    set_labels_kwargs:
+        Keyword arguments for set labels (text at circle edges). Defaults:
+        fontsize=14. Colors are automatically set from ``colors`` unless
+        overridden here.
+    circle_kwargs:
+        Additional keyword arguments for circle styling (e.g., edgecolor,
+        linewidth). Applied to all circle patches after the diagram is created.
+    set_label_shifts:
+        Optional position shifts for each set label as (x_shift, y_shift) tuples.
+        Affects where annotations anchor from when ``annotate_set_labels`` is True.
+    annotate_set_labels:
+        Whether to add annotation lines and boxes around set labels. When True,
+        original set labels are hidden and replaced with annotated versions.
+    annotation_distance:
+        Distance from circle edge to annotation text (in axis units).
+    annotation_kwargs:
+        Styling for annotations. Can include bbox, arrowprops, fontsize, and
+        other text properties. Default arrowprops: {arrowstyle="-", color="0.25",
+        linewidth=0.8}. Default bbox: {boxstyle="round,pad=0.5", fc="white",
+        ec="0.2", lw=0.5}.
+    outpath:
+        Path to save the figure. If provided, saves as PNG at 300 DPI with tight
+        bounding box.
+    use_style:
+        Whether to apply mattplotlib styling to the plot.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axis containing the Venn diagram.
+    """
+    num_sets = len(sets)
+    if num_sets < 2 or num_sets > 3:
+        raise ValueError("Only 2 or 3 sets are supported for Venn diagrams.")
+    
+    axis = _prepare_axes(None, use_style)
+    
+    if num_sets == 2:
+        venn = venn2(subsets=sets, set_labels=set_labels, set_colors=colors[:2], ax=axis, alpha=alpha)
+
+    elif num_sets == 3:
+        venn = venn3(subsets=sets, set_labels=set_labels, set_colors=colors[:3], ax=axis, alpha=alpha)
+    
+    # Circle styling
+    if circle_kwargs:
+        for patch in venn.patches:
+            if patch is not None:
+                for key, value in circle_kwargs.items():
+                    if hasattr(patch, f'set_{key}'):
+                        getattr(patch, f'set_{key}')(value)
+    
+    # Label styling
+    # Subset labels
+    default_subset_labels_kwargs = {
+        "fontsize": 12,
+        "fontweight": "bold",
+        "color": "white",
+    }
+    if subset_labels_kwargs:
+        default_subset_labels_kwargs.update(subset_labels_kwargs)
+    
+    for text in venn.subset_labels:
+        if text is not None:
+            for key, value in default_subset_labels_kwargs.items():
+                # Use the set_ method (e.g., set_fontsize, set_color)
+                setter_method = getattr(text, f"set_{key}", None)
+                if setter_method:
+                    setter_method(value)
+
+    # Set labels
+    default_set_labels_kwargs = {
+        "fontsize": 14,
+    }
+    if set_labels_kwargs:
+        default_set_labels_kwargs.update(set_labels_kwargs)
+    
+    for i, text in enumerate(venn.set_labels):
+        if text is not None:
+            for key, value in default_set_labels_kwargs.items():
+                # Use the set_ method (e.g., set_fontsize, set_color)
+                setter_method = getattr(text, f"set_{key}", None)
+                if setter_method:
+                    setter_method(value)
+            # Apply color based on palette if not overridden
+            if "color" not in default_set_labels_kwargs:
+                text.set_color(colors[i % len(colors)])
+
+    # Label positions
+    if set_label_shifts:
+        for i, label_text in enumerate(venn.set_labels):
+            if label_text is not None and i < len(set_label_shifts):
+                pos = label_text.get_position()
+                x, y = float(pos[0]), float(pos[1])
+                shift_x, shift_y = set_label_shifts[i]
+                label_text.set_position((x + shift_x, y + shift_y))
+
+    # Annotations
+    if annotate_set_labels and set_labels:
+        default_annotation_kwargs: dict[str, Any] = {
+            "arrowprops": {"arrowstyle": "-", "color": "0.25", "linewidth": 0.8},
+            "bbox": {"boxstyle": "round,pad=0.5", "fc": "white", "ec": "0.2", "lw": 0.5},
+            "fontsize": 12,
+            "va": "center",
+        }
+        # Merge set_labels_kwargs into annotation kwargs for text styling
+        if set_labels_kwargs:
+            for key, value in set_labels_kwargs.items():
+                if key not in {"arrowprops", "bbox"}:
+                    default_annotation_kwargs[key] = value
+        if annotation_kwargs:
+            for key, value in annotation_kwargs.items():
+                if key in {"arrowprops", "bbox"} and key in default_annotation_kwargs:
+                    merged = {**default_annotation_kwargs[key], **value}
+                    default_annotation_kwargs[key] = merged
+                else:
+                    default_annotation_kwargs[key] = value
+
+        centers = venn.centers
+        radii = venn.radii
+        
+        for i, label_text in enumerate(venn.set_labels):
+            if label_text is not None and i < len(set_labels) and set_labels[i]:
+
+                pos = label_text.get_position()
+                x_orig = float(pos[0])
+                y_orig = float(pos[1])
+
+                label_text.set_visible(False)
+
+                center = centers[i]
+                x_center = float(center.x)
+                y_center = float(center.y)
+                radius = float(radii[i])
+
+                dx = x_orig - x_center
+                dy = y_orig - y_center
+                dist = np.sqrt(dx**2 + dy**2)
+                
+                if dist > 0:
+                    x_norm = dx / dist
+                    y_norm = dy / dist
+                else:
+                    angles = [135, 45, -90] if num_sets == 3 else [135, 45]
+                    angle_rad = np.deg2rad(angles[i])
+                    x_norm = np.cos(angle_rad)
+                    y_norm = np.sin(angle_rad)
+                
+                x_anchor = x_center + radius * x_norm
+                y_anchor = y_center + radius * y_norm
+
+                x_text = x_center + (radius + annotation_distance) * x_norm
+                y_text = y_center + (radius + annotation_distance) * y_norm
+                
+                horizontalalignment = "left" if x_norm >= 0 else "right"
+                ha_override = default_annotation_kwargs.get("horizontalalignment") or default_annotation_kwargs.get("ha")
+                if ha_override is not None:
+                    horizontalalignment = ha_override
+
+                ann_kwargs = {}
+                for key, value in default_annotation_kwargs.items():
+                    if key in {"ha", "horizontalalignment"}:
+                        continue
+                    if isinstance(value, dict):
+                        ann_kwargs[key] = {**value}
+                    else:
+                        ann_kwargs[key] = value
+                
+                # Arrow style
+                angle_deg = np.rad2deg(np.arctan2(y_norm, x_norm))
+                connectionstyle = f"angle,angleA=0,angleB={angle_deg}"
+                if "arrowprops" in ann_kwargs and isinstance(ann_kwargs["arrowprops"], dict):
+                    ann_kwargs["arrowprops"].update({"connectionstyle": connectionstyle})
+                else:
+                    ann_kwargs["arrowprops"] = {"connectionstyle": connectionstyle}
+
+                # Annotation color
+                user_color = None
+                if annotation_kwargs and 'color' in annotation_kwargs:
+                    user_color = annotation_kwargs['color']
+                elif set_labels_kwargs and 'color' in set_labels_kwargs:
+                    user_color = set_labels_kwargs['color']
+
+                label_color = user_color if user_color is not None else colors[i % len(colors)]
+                ann_kwargs.pop('color', None) # Avoid duplicate colour error
+                
+                axis.annotate(
+                    set_labels[i],
+                    xy=(x_anchor, y_anchor),
+                    xytext=(x_text, y_text),
+                    horizontalalignment=horizontalalignment,
+                    color=label_color,
+                    **ann_kwargs,
+                )
+
+    if outpath:
+        plt.savefig(outpath, bbox_inches='tight', dpi=300)
+
+    return axis
+
+
