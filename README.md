@@ -1,6 +1,6 @@
 ## Matt's Data Visualisation Library (`mattplotlib`)
 
-The `mattplotlib` package provides a small, opinionated set of plotting helpers 
+The `mattplotlib` package provides a small, opinionated set of plotting helpers
 layered on Matplotlib, Seaborn, and Plotly.
 
 It includes a reusable Matplotlib style sheet and shared colour/font settings
@@ -23,6 +23,11 @@ apply_mpl_style()  # loads mattplotlib/styles/mattplotlib.mplstyle
   `mattplotlib/styles/mattplotlib.mplstyle`. Override the `matplotlib_style`
   entry in the config if you maintain a personal theme elsewhere.
 
+### Examples
+
+See the `demo.ipynb` notebook for examples.
+
+![Nested donut chart example](./examples/nested_donut_demo_2.png)
 
 ### Useful snippets
 
@@ -32,4 +37,3 @@ apply_mpl_style()  # loads mattplotlib/styles/mattplotlib.mplstyle
   from mattplotlib import get_config
   palette = get_config().color_cycle
   ```
-
