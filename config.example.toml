@@ -17,3 +17,73 @@ plotly_template = "plotly_white"
 
 # Point to a custom Matplotlib .mplstyle file if you maintain one elsewhere.
 # matplotlib_style = "/absolute/path/to/your/style.mplstyle"
+
+# Additional named colour palettes for reuse (dark → light)
+[mattplotlib.palettes]
+blues = [
+    "#0f3d73",
+    "#165b92",
+    "#1e78b1",
+    "#3d90c4",
+    "#63a9d5",
+    "#8cc1e3",
+    "#b4d7ee",
+    "#caeaf9",
+    "#d9ebf6",
+
+]
+reds = [
+    "#7d121b",
+    "#a01923",
+    "#c4252f",
+    "#e02b35",
+    "#e8575e",
+    "#f08086",
+    "#f6a8ad",
+    "#ebbbbe",
+    "#fbcdd0",
+]
+golds = [
+    "#6f4b00",
+    "#916103",
+    "#b27607",
+    "#d38d0f",
+    "#e7a53b",
+    "#f0c571",
+    "#f5d292",
+    "#f8dfb0",
+    "#fbe9cc",
+]
+teals = [
+    "#0d585c",
+    "#0f716f",
+    "#118a82",
+    "#139f94",
+    "#32b2a5",
+    "#58c3b7",
+    "#83d3c9",
+    "#afe3db",
+    "#d9f2ed",
+]
+purples = [
+    "#502a57",
+    "#633369",
+    "#763d7c",
+    "#8a478f",
+    "#9d52a1",
+    "#af68b0",
+    "#c186c1", 
+    "#d3a4d3",
+    "#e6c3e6",
+]
+greys = [
+    "#2b2e31",
+    "#3f454b",
+    "#596269",
+    "#778086",
+    "#98a4aa",
+    "#b8c2c7",
+    "#d0d8dc",
+    "#e3eaeb",
+    "#eff5f6",
+]

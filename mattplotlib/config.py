@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping as MappingABC
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, field
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
@@ -45,6 +45,7 @@ class MattplotlibConfig:
         "#6D4444",
         "#9A9A9A",
     )
+    palettes: dict[str, tuple[str, ...]] = field(default_factory=dict)
     seaborn_theme: Optional[Dict[str, Any]] = None
     plotly_template: str = "plotly_white"
     matplotlib_style: str = str(
@@ -78,6 +79,7 @@ class MattplotlibConfig:
         return {
             "font_family": self.font_family,
             "color_cycle": list(self.color_cycle),
+            "palettes": {k: list(v) for k, v in self.palettes.items()},
             "seaborn_theme": self.seaborn_theme,
             "plotly_template": self.plotly_template,
             "matplotlib_style": self.matplotlib_style,
@@ -87,6 +89,8 @@ class MattplotlibConfig:
 def _coerce_value(name: str, value: Any) -> Any:
     if name == "color_cycle" and isinstance(value, list):
         return tuple(value)
+    if name == "palettes" and isinstance(value, dict):
+        return {k: tuple(v) if isinstance(v, list) else v for k, v in value.items()}
     if name == "matplotlib_style":
         return str(Path(value).expanduser())
     return value
@@ -157,6 +161,19 @@ def get_config() -> MattplotlibConfig:
     if _CONFIG is None:
         _CONFIG = load_config()
     return _CONFIG
+
+
+def get_palette(name: str) -> tuple[str, ...]:
+    """Return a named palette from the loaded configuration.
+
+    Raises KeyError if the palette name is unknown.
+    """
+    cfg = get_config()
+    try:
+        return cfg.palettes[name]
+    except KeyError as exc:  # pragma: no cover - simple passthrough
+        available = ", ".join(sorted(cfg.palettes)) or "<none>"
+        raise KeyError(f"Palette '{name}' not found. Available: {available}.") from exc
 
 
 def _env_config_path() -> Optional[Path]:
