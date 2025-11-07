@@ -27,7 +27,7 @@ apply_mpl_style()  # loads mattplotlib/styles/mattplotlib.mplstyle
 
 See the `demo.ipynb` notebook for examples.
 
-![Nested donut chart example](./examples/nested_donut_demo_2.png)
+![Nested donut chart example](./examples/nested_donut_demo.png)
 
 ### Useful snippets
 
